@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebXR Status</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="col-lg-8 mx-auto p-4">
+      <header class="border-bottom mb-5">
+        <h1>WebXR Status</h1>
+      </header>
+      <main class="">
+        <div id="console" class="alert alert-primary d-none" role="alert"></div>
+        <div class="row">
+          <div class="col">
+            <h2 class="mb-3">WebXR Device API</h2>
+            <div id="webxr"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="ar" class="col d-none">
+            <h3>Immersive-AR</h3>
+            <button type="button" class="btn btn-primary" onclick="startAR()">Check AR features</button>
+            <div id="ar-features" class="mt-3"></div>
+          </div>
+          <div id="vr" class="col d-none">
+            <h3>Immersive-VR</h3>
+            <button type="button" class="btn btn-primary" id="start-vr" onclick="startVR()">Check VR features</button>
+            <div id="vr-features" class="mt-3"></div>
+          </div>
+        </div>
+      </main>
+      <div id="dummy-dom-overlay"></div>
+    </div>
+    <script>
+      function addMessage(message, containerId) {
+        const p = document.createElement("p");
+        p.innerText = message;
+        const container = document.getElementById(containerId);
+        container.appendChild(p);
+        container.classList.remove("d-none");
+      }
+      function addSupport(supported, name, container) {
+        if (supported) {
+          addMessage("✅ " + name, container);
+        } else {
+          addMessage("❌ " + name, container);
+        }
+      }
+
+      // Check HTTPS
+      if (window.location.protocol !== "https:") {
+        addMessage("WebXR requires HTTPS", "console");
+      }
+
+      // Check WebXR Support
+      if ("xr" in window.navigator) {
+        addSupport(true, "WebXR Device API", "webxr");
+
+        navigator.xr.isSessionSupported("immersive-ar").then(
+          (supported) => {
+            addSupport(supported, "immersive-ar session mode", "webxr");
+            document.getElementById("ar").classList.remove("d-none");
+          },
+          (error) => {
+            addMessage(error, "console");
+          }
+        );
+
+        navigator.xr.isSessionSupported("immersive-vr").then(
+          (supported) => {
+            addSupport(supported, "immersive-vr session mode", "webxr");
+            document.getElementById("vr").classList.remove("d-none");
+          },
+          (error) => {
+            addMessage(error, "console");
+          }
+        );
+
+        navigator.xr.isSessionSupported("inline").then(
+          (supported) => {
+            addSupport(supported, "inline session mode", "webxr");
+          },
+          (error) => {
+            addMessage(error, "console");
+          }
+        );
+      } else {
+        addSupport(false, "WebXR Device API", "webxr");
+      }
+
+      const xrSessionFeatures = [
+        "anchors",
+        "bounded-floor",
+        "depth-sensing",
+        "dom-overlay",
+        "hand-tracking",
+        "hit-test",
+        "layers",
+        "light-estimation",
+        "local",
+        "local-floor",
+        "secondary-views",
+        "unbounded",
+        "viewer",
+      ];
+
+      function startAR() {
+        startXR("ar");
+      }
+
+      function startVR() {
+        startXR("vr");
+      }
+      function startXR(mode) {
+        navigator.xr
+          .requestSession("immersive-" + mode, {
+            optionalFeatures: xrSessionFeatures,
+            depthSensing: {
+              usagePreference: ["cpu-optimized", "gpu-optimized"],
+              dataFormatPreference: ["luminance-alpha", "float32"],
+            },
+            domOverlay: {
+              root: document.getElementById("dummy-dom-overlay"),
+            },
+          })
+          .then(
+            (session) => {
+              
+              for (const feature of xrSessionFeatures) {
+                addSupport(session.enabledFeatures.indexOf(feature) >= 0, feature, mode + "-features");
+              }
+              
+              window.asdf = session;
+              session.end().then(
+                () => {
+                  
+                },
+                (error) => {
+                  addMessage(error, "console");
+                }
+              );
+            },
+            (error) => {
+              addMessage(error, "console");
+            }
+          );
+      }
+    </script>
+  </body>
+</html>
