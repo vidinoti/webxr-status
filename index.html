@@ -67,7 +67,9 @@
         navigator.xr.isSessionSupported("immersive-ar").then(
           (supported) => {
             addSupport(supported, "immersive-ar session mode", "webxr");
-            document.getElementById("ar").classList.remove("d-none");
+            if (supported) {
+              document.getElementById("ar").classList.remove("d-none");
+            }
           },
           (error) => {
             addMessage(error, "console");
@@ -77,7 +79,9 @@
         navigator.xr.isSessionSupported("immersive-vr").then(
           (supported) => {
             addSupport(supported, "immersive-vr session mode", "webxr");
-            document.getElementById("vr").classList.remove("d-none");
+            if (supported) {
+              document.getElementById("vr").classList.remove("d-none");
+            }
           },
           (error) => {
             addMessage(error, "console");
@@ -133,16 +137,13 @@
           })
           .then(
             (session) => {
-              
               for (const feature of xrSessionFeatures) {
                 addSupport(session.enabledFeatures.indexOf(feature) >= 0, feature, mode + "-features");
               }
-              
+
               window.asdf = session;
               session.end().then(
-                () => {
-                  
-                },
+                () => {},
                 (error) => {
                   addMessage(error, "console");
                 }
