@@ -138,7 +138,8 @@
           .then(
             (session) => {
               for (const feature of xrSessionFeatures) {
-                addSupport(session.enabledFeatures.indexOf(feature) >= 0, feature, mode + "-features");
+                // Note: Vision Pro does not return any enabledFeatures
+                addSupport(session.enabledFeatures && session.enabledFeatures.indexOf(feature) >= 0, feature, mode + "-features");
               }
 
               window.asdf = session;
